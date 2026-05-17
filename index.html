@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USDT Wallet Pro</title>
+    <title>Secure BDT Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -11,105 +11,69 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #050505; color: white; margin: 0; overflow-x: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 28px; }
-        .gradient-cyan { background: linear-gradient(135deg, #22d3ee, #0ea5e9); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-        input { background: rgba(0,0,0,0.5) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; outline: none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        body { font-family: 'Outfit', sans-serif; background: #0f172a; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
 
     <!-- Auth Section -->
     <div id="authSection" class="max-w-md mx-auto h-screen flex flex-col justify-center px-6">
-        <div class="glass p-8 text-center border-t border-cyan-500/20 shadow-2xl">
-            <h1 class="text-3xl font-black mb-8 text-cyan-400 tracking-tighter uppercase italic">Pay Node</h1>
-            <input type="email" id="email" placeholder="Email Address" class="w-full p-4 rounded-2xl mb-4 text-sm">
-            <input type="password" id="password" placeholder="Password/PIN" class="w-full p-4 rounded-2xl mb-8 text-sm">
-            <div class="flex gap-4">
-                <button onclick="handleAuth('login')" class="flex-1 gradient-cyan text-black font-black py-4 rounded-2xl uppercase text-[11px]">Login</button>
-                <button onclick="handleAuth('signup')" class="flex-1 border border-white/10 py-4 rounded-2xl font-bold uppercase text-[11px]">Join Now</button>
+        <div class="glass p-8 text-center border-t border-emerald-500/30">
+            <h1 class="text-2xl font-black mb-6 text-emerald-400">SECURE BDT WALLET</h1>
+            <input type="email" id="email" placeholder="Email Address" class="w-full p-3 rounded-xl mb-3 bg-slate-900 border border-slate-700 outline-none">
+            <input type="password" id="password" placeholder="Create/Enter 4-Digit PIN" maxlength="4" class="w-full p-3 rounded-xl mb-6 bg-slate-900 border border-slate-700 outline-none tracking-widest text-center text-xl">
+            <div class="flex gap-3">
+                <button onclick="handleAuth('login')" class="flex-1 bg-emerald-600 py-3 rounded-xl font-bold">Login</button>
+                <button onclick="handleAuth('signup')" class="flex-1 border border-emerald-600 py-3 rounded-xl font-bold">Sign Up</button>
             </div>
         </div>
     </div>
 
     <!-- Main App -->
-    <div id="mainApp" class="max-w-md mx-auto pb-32 px-5 hidden">
-        <div class="flex justify-between items-center py-8">
-            <h2 class="text-white font-bold text-xs">UID: <span id="uId" class="text-cyan-400">---</span></h2>
-            <button onclick="auth.signOut()" class="text-red-500 text-[10px] font-black border border-red-500/20 px-4 py-2 rounded-xl">Logout</button>
+    <div id="mainApp" class="max-w-md mx-auto pb-10 px-5 hidden">
+        <div class="flex justify-between items-center py-6">
+            <h2 class="text-sm font-bold">UID: <span id="uId" class="text-emerald-400">---</span></h2>
+            <button onclick="auth.signOut()" class="text-xs text-red-400 font-bold">LOGOUT</button>
         </div>
 
-        <!-- Balance Card -->
-        <div class="glass p-8 text-center mb-8 relative border-t border-white/10">
-            <p class="text-gray-500 text-[10px] font-black uppercase mb-2">Total Balance</p>
-            <div class="flex items-center justify-center gap-2 mb-8">
-                <i class="fas fa-wallet text-cyan-400 text-2xl"></i>
-                <h1 id="mainBal" class="text-5xl font-black tracking-tighter">0.0000</h1>
-                <span class="text-xl text-white/40">USDT</span>
-            </div>
-            
-            <!-- bkash Style Grid Options -->
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="openModal('sendMoneyModal')" class="bg-cyan-500/10 border border-cyan-500/20 py-4 rounded-2xl font-black text-xs text-cyan-400 flex flex-col items-center justify-center gap-2">
-                    <i class="fas fa-paper-plane text-lg"></i> Send Money
-                </button>
-                <button onclick="openModal('cashOutModal')" class="bg-white/5 border border-white/10 py-4 rounded-2xl font-black text-xs flex flex-col items-center justify-center gap-2">
-                    <i class="fas fa-hand-holding-usd text-lg"></i> Cash Out
-                </button>
-            </div>
+        <div class="glass p-6 text-center mb-6">
+            <p class="text-slate-400 text-[10px] uppercase">Available Balance</p>
+            <h1 id="mainBal" class="text-4xl font-black my-2">0.00 <span class="text-sm text-emerald-500">BDT</span></h1>
         </div>
 
-        <!-- History Button -->
-        <div class="space-y-4">
-            <button onclick="openHistory()" class="w-full bg-white/5 border border-white/10 py-4 rounded-[28px] uppercase text-[10px] font-black text-gray-400">Statement / History</button>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <button onclick="openModal('sendMoneyModal')" class="bg-emerald-600 p-4 rounded-2xl font-bold text-sm">Send Money</button>
+            <button onclick="openHistory()" class="bg-slate-800 p-4 rounded-2xl font-bold text-sm">History</button>
         </div>
 
-        <!-- Support Section -->
-        <div class="mt-12 p-6 glass text-center">
-            <p class="text-cyan-400 text-[10px] font-black uppercase mb-2">Emergency Support</p>
-            <a href="mailto:lafex44299@proadech.com" class="text-white text-xs font-mono underline block mb-3">lafex44299@proadech.com</a>
-            <p class="text-[8px] text-gray-500 uppercase leading-relaxed font-bold">Please include your UID and Email when contacting support.</p>
+        <div class="glass p-5 text-center">
+            <p class="text-[10px] text-slate-400 uppercase mb-1">Support</p>
+            <a href="mailto:fafod33233@tokoub.com" class="text-emerald-400 text-sm font-mono underline">fafod33233@tokoub.com</a>
         </div>
     </div>
 
-    <!-- Send Money Modal (bKash Style) -->
+    <!-- Send Money Modal -->
     <div id="sendMoneyModal" class="modal">
-        <div class="glass p-8 w-full max-w-sm border-t-4 border-cyan-500">
-            <h2 class="text-xl font-black mb-6 text-center text-cyan-400 uppercase italic">Send Money</h2>
-            <input type="text" id="smFriendUid" placeholder="Recipient UID" class="w-full p-4 rounded-xl mb-3 text-xs uppercase">
-            <input type="number" id="smAmount" placeholder="Amount USDT" class="w-full p-4 rounded-xl mb-3 text-xs">
-            <input type="password" id="smPass" placeholder="Enter PIN/Password" class="w-full p-4 rounded-xl mb-6 text-xs">
-            <p class="text-[9px] text-gray-500 text-center mb-4 uppercase">Fee: 0.01 USDT</p>
+        <div class="glass p-6 w-full max-w-sm border-t-4 border-emerald-500">
+            <h2 class="text-lg font-bold mb-4 text-center">Send Money</h2>
+            <input type="text" id="rUid" placeholder="Recipient UID" class="w-full p-3 rounded-lg mb-3 bg-slate-900 border border-slate-700 text-sm uppercase">
+            <input type="number" id="amt" placeholder="Amount BDT" class="w-full p-3 rounded-lg mb-3 bg-slate-900 border border-slate-700 text-sm">
+            <input type="password" id="pin" placeholder="Enter 4-Digit PIN" maxlength="4" class="w-full p-3 rounded-lg mb-6 bg-slate-900 border border-slate-700 text-sm text-center tracking-widest">
             <div class="flex gap-3">
-                <button onclick="closeModal('sendMoneyModal')" class="flex-1 bg-white/5 py-4 rounded-xl text-[10px] font-bold uppercase">Cancel</button>
-                <button onclick="submitSendMoney()" class="flex-1 gradient-cyan text-black font-black py-4 rounded-xl text-[10px] uppercase">Send Now</button>
+                <button onclick="closeModal('sendMoneyModal')" class="flex-1 bg-slate-800 py-3 rounded-lg text-xs">Cancel</button>
+                <button onclick="transferMoney()" class="flex-1 bg-emerald-600 py-3 rounded-lg text-xs">Confirm Send</button>
             </div>
         </div>
     </div>
 
-    <!-- Cash Out Modal -->
-    <div id="cashOutModal" class="modal">
-        <div class="glass p-8 w-full max-w-sm border-t-4 border-cyan-500">
-            <h2 class="text-xl font-black mb-4 text-center text-cyan-400 uppercase italic">Cash Out</h2>
-            <input type="number" id="coAmount" placeholder="Amount USDT (Min 10)" class="w-full p-4 rounded-xl mb-3 text-sm">
-            <input type="text" id="coAddress" placeholder="Agent BEP20 Wallet Address" class="w-full p-4 rounded-xl mb-3 text-sm">
-            <input type="password" id="coPass" placeholder="Enter PIN/Password" class="w-full p-4 rounded-xl mb-6 text-sm">
-            <p class="text-[9px] text-gray-500 text-center mb-4 uppercase">Agent Cash Out Fee: 1.85%</p>
-            <div class="flex gap-3">
-                <button onclick="closeModal('cashOutModal')" class="flex-1 bg-white/5 py-4 rounded-xl text-[10px] font-bold uppercase">Cancel</button>
-                <button onclick="submitCashOut()" class="flex-1 gradient-cyan text-black font-black py-4 rounded-xl text-[10px] uppercase">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- History/Statement Modal -->
+    <!-- History Modal -->
     <div id="historyModal" class="modal">
-        <div class="glass p-8 w-full max-w-sm">
-            <h2 class="text-lg font-black mb-6 text-center text-cyan-400 uppercase">Statement</h2>
-            <div id="historyList" class="space-y-3 max-h-[50vh] overflow-y-auto no-scrollbar"></div>
-            <button onclick="closeModal('historyModal')" class="w-full mt-6 text-gray-600 font-black uppercase text-[10px]">Close</button>
+        <div class="glass p-6 w-full max-w-sm h-[80vh] flex flex-col">
+            <h2 class="text-lg font-bold mb-4 text-center">Transaction History</h2>
+            <div id="historyList" class="flex-1 overflow-y-auto space-y-2"></div>
+            <button onclick="closeModal('historyModal')" class="mt-4 bg-slate-800 py-3 rounded-lg text-xs">Close</button>
         </div>
     </div>
 
@@ -128,131 +92,64 @@
         const database = firebase.database();
         let userData = null;
 
+        // Auth
         function handleAuth(type) {
             const e = document.getElementById('email').value.trim();
-            const p = document.getElementById('password').value;
-            if(!e || !p) return alert("Fill fields!");
+            const p = document.getElementById('password').value.trim();
+            if(p.length !== 4) return alert("PIN must be 4 digits!");
+            
             if(type === 'signup') {
                 auth.createUserWithEmailAndPassword(e, p).then(c => {
-                    const smallId = e.split('@')[0].substring(0, 5).toUpperCase() + Math.floor(1000 + Math.random() * 8999);
-                    database.ref('users/' + c.user.uid).set({ uid: smallId, email: e, bal: 50, pass: p }); // default 50 balance for test
+                    const uid = "BDT" + Math.floor(10000 + Math.random() * 90000);
+                    database.ref('users/' + c.user.uid).set({ uid: uid, email: e, bal: 100, pin: p }); // 100 BDT bonus
                 }).catch(err => alert(err.message));
-            } else { auth.signInWithEmailAndPassword(e, p).catch(err => alert("Login Failed")); }
+            } else { auth.signInWithEmailAndPassword(e, p).catch(() => alert("Login Failed")); }
         }
 
-        auth.onAuthStateChanged(user => {
-            if(user) {
+        auth.onAuthStateChanged(u => {
+            if(u) {
                 document.getElementById('authSection').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                database.ref('users/' + user.uid).on('value', s => { userData = s.val(); updateUI(); });
-            } else { document.getElementById('authSection').classList.remove('hidden'); document.getElementById('mainApp').classList.add('hidden'); }
+                database.ref('users/' + u.uid).on('value', s => { userData = s.val(); if(userData) updateUI(); });
+            } else { location.reload(); }
         });
 
         function updateUI() {
-            if(!userData) return;
-            document.getElementById('mainBal').innerText = userData.bal.toFixed(4);
+            document.getElementById('mainBal').innerHTML = userData.bal.toFixed(2) + ' <span class="text-sm text-emerald-500">BDT</span>';
             document.getElementById('uId').innerText = userData.uid;
         }
 
-        // --- SEND MONEY LOGIC (bKash Style) ---
-        function submitSendMoney() {
-            const fee = 0.01; 
-            const tUid = document.getElementById('smFriendUid').value.trim().toUpperCase();
-            const amt = parseFloat(document.getElementById('smAmount').value);
-            const pass = document.getElementById('smPass').value;
+        // Send Money
+        function transferMoney() {
+            const rUid = document.getElementById('rUid').value.trim().toUpperCase();
+            const amt = parseFloat(document.getElementById('amt').value);
+            const pin = document.getElementById('pin').value.trim();
 
-            if(!tUid || isNaN(amt) || amt <= 0) return alert("Invalid Input!");
-            if(pass !== userData.pass) return alert("Wrong PIN/Password!");
-            if(tUid === userData.uid) return alert("Self-transfer not allowed!");
-
-            const totalCost = amt + fee;
-            if(userData.bal < totalCost) return alert("Insufficient Balance! Need: " + totalCost.toFixed(2));
+            if(pin !== userData.pin) return alert("Wrong PIN!");
+            if(amt > userData.bal) return alert("Insufficient Balance!");
 
             database.ref('users').once('value', snapshot => {
                 let recipientKey = null;
-                let recipientData = null;
-
-                snapshot.forEach(child => {
-                    if(child.val().uid === tUid) {
-                        recipientKey = child.key;
-                        recipientData = child.val();
-                    }
-                });
+                snapshot.forEach(child => { if(child.val().uid === rUid) recipientKey = child.key; });
 
                 if(recipientKey) {
-                    const now = new Date().toLocaleString();
-                    
-                    // 1. Deduct from Sender
-                    database.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - totalCost });
-                    // 2. Add to Recipient
-                    database.ref('users/' + recipientKey).update({ bal: recipientData.bal + amt });
-
-                    // 3. Log History
-                    database.ref('history/' + auth.currentUser.uid).push({ type: "Send Money", amount: "-" + amt.toFixed(2), status: "Successful", time: now });
-                    database.ref('history/' + auth.currentUser.uid).push({ type: "Send Money Fee", amount: "-" + fee.toFixed(2), status: "Successful", time: now });
-                    database.ref('history/' + recipientKey).push({ type: "Received Money", amount: "+" + amt.toFixed(2), status: "Successful", time: now });
-
-                    alert("Send Money Successful!");
+                    const now = new Date().toLocaleTimeString();
+                    database.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - amt });
+                    database.ref('users/' + recipientKey).update({ bal: database.ref('users/' + recipientKey).bal + amt }); // Logic update required
+                    database.ref('history/' + auth.currentUser.uid).push({ type: "Send", to: rUid, amt: amt, time: now });
+                    alert("Transfer Successful!");
                     closeModal('sendMoneyModal');
-                    document.getElementById('smFriendUid').value = '';
-                    document.getElementById('smAmount').value = '';
-                    document.getElementById('smPass').value = '';
-                } else {
-                    alert("Recipient UID Not Found!");
-                }
-            });
-        }
-
-        // --- CASH OUT LOGIC (bKash Style 1.85% Fee) ---
-        function submitCashOut() {
-            const amt = parseFloat(document.getElementById('coAmount').value);
-            const addr = document.getElementById('coAddress').value.trim();
-            const pass = document.getElementById('coPass').value;
-            
-            if(amt < 10 || isNaN(amt)) return alert("Minimum Cash Out 10 USDT!");
-            if(pass !== userData.pass) return alert("Wrong PIN/Password!");
-            if(!addr) return alert("Provide Agent Wallet Address!");
-
-            const fee = amt * 0.0185; // 1.85% Fee
-            const totalCost = amt + fee;
-
-            if(userData.bal < totalCost) return alert("Insufficient Balance! Total needed with fee: " + totalCost.toFixed(2));
-
-            const now = new Date().toLocaleString();
-            
-            // Deduct total balance from User
-            database.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - totalCost }).then(() => {
-                // Send Request to Admin for Agent Cashout
-                database.ref('cashoutRequests').push({ uid: userData.uid, amount: amt, fee: fee, address: addr, status: "Pending", time: now });
-                // Log History
-                database.ref('history/' + auth.currentUser.uid).push({ type: "Cash Out (Pending)", amount: "-" + amt.toFixed(2), status: "Pending", time: now });
-                database.ref('history/' + auth.currentUser.uid).push({ type: "Cash Out Fee", amount: "-" + fee.toFixed(2), status: "Successful", time: now });
-                
-                alert("Cash Out Request Submitted to Agent!"); 
-                closeModal('cashOutModal');
-                document.getElementById('coAmount').value = '';
-                document.getElementById('coAddress').value = '';
-                document.getElementById('coPass').value = '';
+                } else { alert("UID Not Found!"); }
             });
         }
 
         function openHistory() {
-            const list = document.getElementById('historyList'); list.innerHTML = "Syncing..."; openModal('historyModal');
-            database.ref('history/' + auth.currentUser.uid).on('value', s => {
+            openModal('historyModal');
+            const list = document.getElementById('historyList');
+            database.ref('history/' + auth.currentUser.uid).once('value', s => {
                 list.innerHTML = "";
-                if(!s.exists()) { list.innerHTML = "No transactions found"; return; }
-                let logs = []; s.forEach(c => { logs.push(c.val()); }); logs.reverse();
-                logs.forEach(h => {
-                    list.innerHTML += `<div class="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div class="flex justify-between">
-                            <span class="text-white font-black text-[10px] uppercase">${h.type}</span>
-                            <span class="text-white font-black text-xs">${h.amount}</span>
-                        </div>
-                        <div class="flex justify-between mt-1">
-                            <span class="text-[7px] text-gray-500 uppercase">${h.time}</span>
-                            <span class="text-cyan-400 text-[8px] uppercase font-bold">${h.status}</span>
-                        </div>
-                    </div>`;
+                s.forEach(c => {
+                    list.innerHTML += `<div class="bg-slate-800 p-3 rounded-lg text-xs flex justify-between"><span>Sent to ${c.val().to}</span><span class="text-emerald-400 font-bold">${c.val().amt} BDT</span></div>`;
                 });
             });
         }
