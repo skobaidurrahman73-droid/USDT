@@ -2,132 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BDT Secure Wallet</title>
+    <title>BDT Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0b0e14; color: #fff; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .gradient-btn { background: linear-gradient(135deg, #10b981, #059669); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        body { background: #050505; color: white; font-family: sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <!-- Auth -->
+    <!-- Auth Section -->
     <div id="authSection" class="max-w-md mx-auto h-screen flex flex-col justify-center px-6">
-        <div class="glass p-8 rounded-3xl text-center border border-emerald-500/20">
-            <h1 class="text-3xl font-black mb-6 text-emerald-400">BDT WALLET</h1>
-            <input type="email" id="email" placeholder="Email Address" class="w-full p-4 rounded-xl mb-3 bg-black/50 border border-white/10 outline-none">
-            <input type="password" id="password" placeholder="6-Digit PIN" maxlength="6" class="w-full p-4 rounded-xl mb-6 bg-black/50 border border-white/10 outline-none text-center tracking-[0.5em] text-2xl font-bold">
-            <div class="flex gap-3">
-                <button onclick="handleAuth('login')" class="flex-1 gradient-btn py-4 rounded-xl font-bold">Sign In</button>
-                <button onclick="handleAuth('signup')" class="flex-1 bg-white/5 py-4 rounded-xl font-bold">Sign Up</button>
+        <div class="glass p-8 text-center">
+            <h1 class="text-2xl font-bold mb-6 text-emerald-400">BDT WALLET</h1>
+            <input type="email" id="email" placeholder="Email Address" class="w-full p-3 rounded-lg mb-3 bg-white/10 text-white outline-none">
+            <input type="password" id="password" placeholder="6-Digit PIN" maxlength="6" class="w-full p-3 rounded-lg mb-6 bg-white/10 text-white outline-none text-center tracking-widest">
+            <div class="flex gap-2">
+                <button onclick="handleAuth('login')" class="flex-1 bg-emerald-600 py-3 rounded-lg font-bold">Login</button>
+                <button onclick="handleAuth('signup')" class="flex-1 border border-emerald-600 py-3 rounded-lg font-bold">Register</button>
             </div>
         </div>
     </div>
 
-    <!-- App -->
-    <div id="mainApp" class="max-w-md mx-auto pb-10 px-5 hidden">
-        <div class="flex justify-between items-center py-8">
-            <div>
-                <p class="text-[10px] text-emerald-500 uppercase font-bold">Your Account</p>
-                <h2 id="uId" class="text-lg font-black">---</h2>
-            </div>
-            <button onclick="auth.signOut()" class="bg-red-500/10 text-red-500 px-4 py-2 rounded-lg text-xs font-bold">Logout</button>
+    <!-- Main App -->
+    <div id="mainApp" class="max-w-md mx-auto px-6 py-10 hidden">
+        <div class="flex justify-between mb-8">
+            <h2 class="font-bold">UID: <span id="uId" class="text-emerald-400">---</span></h2>
+            <button onclick="auth.signOut()" class="text-xs text-red-400">LOGOUT</button>
         </div>
-
-        <div class="glass p-8 rounded-3xl text-center mb-6 border-b-4 border-emerald-500">
-            <p class="text-slate-400 text-xs uppercase tracking-widest mb-2">Total Balance</p>
-            <h1 id="mainBal" class="text-5xl font-black">0.00 <span class="text-xl text-emerald-500">BDT</span></h1>
+        <div class="glass p-8 text-center mb-6">
+            <p class="text-xs text-gray-400 uppercase">Balance</p>
+            <h1 id="mainBal" class="text-4xl font-black my-2">0.00 BDT</h1>
         </div>
-
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="openModal('sendModal')" class="bg-emerald-500 text-black font-black py-5 rounded-2xl">Send Money</button>
-            <button onclick="openHistory()" class="glass font-bold py-5 rounded-2xl">History</button>
-        </div>
-
-        <div class="mt-8 text-center opacity-50">
-            <a href="mailto:fafod33233@tokoub.com" class="text-xs">Support: fafod33233@tokoub.com</a>
-        </div>
+        <button onclick="openModal('sendModal')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold mb-3">Send Money</button>
+        <button onclick="openHistory()" class="w-full bg-white/5 py-4 rounded-xl font-bold">Transaction History</button>
+        <p class="text-center text-[10px] mt-10 text-gray-500">Support: fafod33233@tokoub.com</p>
     </div>
 
     <!-- Modals -->
-    <div id="sendModal" class="modal"><div class="glass p-6 w-full max-w-sm rounded-3xl"><h2 class="text-xl font-black mb-4">Send Money</h2><input type="text" id="rUid" placeholder="Recipient UID" class="w-full p-4 rounded-xl mb-3 bg-black/50 border border-white/10 outline-none uppercase"><input type="number" id="amt" placeholder="Amount (BDT)" class="w-full p-4 rounded-xl mb-3 bg-black/50 border border-white/10 outline-none"><input type="password" id="pin" placeholder="6-Digit PIN" maxlength="6" class="w-full p-4 rounded-xl mb-6 bg-black/50 border border-white/10 outline-none text-center"><div class="flex gap-3"><button onclick="closeModal('sendModal')" class="flex-1 py-3 rounded-xl bg-white/5">Back</button><button onclick="transfer()" class="flex-1 py-3 rounded-xl gradient-btn font-bold">Send</button></div></div></div>
-    <div id="historyModal" class="modal"><div class="glass p-6 w-full max-w-sm h-[70vh] rounded-3xl flex flex-col"><h2 class="text-xl font-black mb-4">History</h2><div id="histList" class="flex-1 overflow-y-auto space-y-3"></div><button onclick="closeModal('historyModal')" class="mt-4 py-3 rounded-xl bg-white/5">Close</button></div></div>
+    <div id="sendModal" class="modal"><div class="glass p-6 w-full max-w-sm"><h2 class="mb-4">Send Money</h2><input type="text" id="rUid" placeholder="Recipient UID" class="w-full p-3 mb-2 rounded bg-black outline-none uppercase"><input type="number" id="amt" placeholder="Amount" class="w-full p-3 mb-2 rounded bg-black outline-none"><input type="password" id="pin" placeholder="6-Digit PIN" maxlength="6" class="w-full p-3 mb-4 rounded bg-black outline-none"><div class="flex gap-2"><button onclick="closeModal('sendModal')" class="flex-1 py-2 bg-gray-700 rounded">Cancel</button><button onclick="transfer()" class="flex-1 py-2 bg-emerald-600 rounded">Send</button></div></div></div>
+    <div id="historyModal" class="modal"><div class="glass p-6 w-full max-w-sm"><h2 class="mb-4">History</h2><div id="histList" class="max-h-60 overflow-y-auto"></div><button onclick="closeModal('historyModal')" class="w-full mt-4 py-2 bg-gray-700 rounded">Close</button></div></div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBIM8Rp8REYjdPHZegCYBF5ikW6Xdcqeg4",
-            authDomain: "usdt-72320.firebaseapp.com",
-            projectId: "usdt-72320",
-            databaseURL: "https://usdt-72320-default-rtdb.firebaseio.com",
-            storageBucket: "usdt-72320.firebasestorage.app",
-            messagingSenderId: "7688156181",
-            appId: "1:7688156181:web:85ae9e18021d149627ca1c"
-        };
+        const firebaseConfig = { /* আপনার কনফিগারেশন এখানে বসান */ };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-        let userData = null, userKey = null;
+        let userData = null;
 
         auth.onAuthStateChanged(u => {
             if(u) {
-                userKey = u.uid;
                 document.getElementById('authSection').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                db.ref('users/' + userKey).on('value', s => { userData = s.val(); if(userData) updateUI(); });
-            } else {
-                document.getElementById('authSection').classList.remove('hidden');
-                document.getElementById('mainApp').classList.add('hidden');
-            }
+                db.ref('users/' + u.uid).on('value', s => { userData = s.val(); if(userData) { document.getElementById('mainBal').innerText = userData.bal.toFixed(2) + " BDT"; document.getElementById('uId').innerText = userData.uid; }});
+            } else { location.reload(); }
         });
 
         function handleAuth(type) {
-            const e = document.getElementById('email').value.trim();
-            const p = document.getElementById('password').value.trim();
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
             if(p.length !== 6) return alert("PIN must be 6 digits!");
-            
             if(type === 'signup') {
                 auth.createUserWithEmailAndPassword(e, p).then(c => {
-                    db.ref('users/' + c.user.uid).set({ uid: "BDT" + Math.floor(100000 + Math.random() * 900000), bal: 100, pin: p });
+                    db.ref('users/' + c.user.uid).set({ uid: "BDT" + Math.floor(100000 + Math.random()*900000), bal: 100, pin: p });
                 }).catch(err => alert(err.message));
-            } else { auth.signInWithEmailAndPassword(e, p).catch(() => alert("Login Failed")); }
+            } else { auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message)); }
         }
 
-        function updateUI() {
-            document.getElementById('mainBal').innerHTML = userData.bal.toFixed(2) + ' <span class="text-xl text-emerald-500">BDT</span>';
-            document.getElementById('uId').innerText = userData.uid;
-        }
-
-        function transfer() {
-            const rUid = document.getElementById('rUid').value.trim().toUpperCase();
+        async function transfer() {
+            const rUid = document.getElementById('rUid').value.toUpperCase();
             const amt = parseFloat(document.getElementById('amt').value);
-            const pin = document.getElementById('pin').value.trim();
+            const pin = document.getElementById('pin').value;
             if(pin !== userData.pin) return alert("Wrong PIN!");
-            if(amt > userData.bal) return alert("Low Balance!");
-            
-            db.ref('users').once('value', s => {
-                let recKey = null;
-                s.forEach(c => { if(c.val().uid === rUid) recKey = c.key; });
-                if(recKey) {
-                    db.ref('users/' + userKey).update({ bal: userData.bal - amt });
-                    db.ref('users/' + recKey).update({ bal: s.val()[recKey].bal + amt });
-                    db.ref('history/' + userKey).push({ type: "Sent", to: rUid, amt: amt });
-                    alert("Success!"); closeModal('sendModal');
-                } else alert("UID Not Found!");
-            });
+            if(amt > userData.bal) return alert("Insufficient!");
+
+            const snapshot = await db.ref('users').once('value');
+            let recKey = null;
+            snapshot.forEach(c => { if(c.val().uid === rUid) recKey = c.key; });
+
+            if(recKey) {
+                db.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - amt });
+                db.ref('users/' + recKey).update({ bal: snapshot.val()[recKey].bal + amt });
+                db.ref('history/' + auth.currentUser.uid).push({ type: "Sent to " + rUid, amt: amt });
+                alert("Success!"); closeModal('sendModal');
+            } else alert("UID not found!");
         }
 
         function openHistory() {
             openModal('historyModal');
-            db.ref('history/' + userKey).once('value', s => {
-                const list = document.getElementById('histList'); list.innerHTML = "";
-                s.forEach(c => { list.innerHTML += `<div class="p-3 bg-white/5 rounded-xl text-sm flex justify-between"><span>To ${c.val().to}</span><span class="font-bold text-emerald-400">-${c.val().amt} BDT</span></div>`; });
+            db.ref('history/' + auth.currentUser.uid).once('value', s => {
+                document.getElementById('histList').innerHTML = "";
+                s.forEach(c => { document.getElementById('histList').innerHTML += `<p class="text-xs mb-1">${c.val().type}: ${c.val().amt} BDT</p>`; });
             });
         }
 
