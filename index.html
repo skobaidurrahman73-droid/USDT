@@ -75,10 +75,10 @@
     </div>
 
     <div id="historyModal" class="modal">
-        <div class="glass p-8 w-full max-w-sm">
-            <h2 class="text-lg font-black mb-6 text-center text-cyan-400 uppercase">Statement</h2>
-            <div id="historyList" class="space-y-3 max-h-[50vh] overflow-y-auto no-scrollbar"></div>
-            <button onclick="closeModal('historyModal')" class="w-full mt-6 text-gray-600 font-black uppercase text-[10px]">Close</button>
+        <div class="glass p-6 w-full max-w-sm">
+            <h2 class="text-lg font-black mb-4 text-center text-cyan-400 uppercase">Statement</h2>
+            <div id="historyList" class="space-y-3 max-h-[60vh] overflow-y-auto no-scrollbar pr-1"></div>
+            <button onclick="closeModal('historyModal')" class="w-full mt-4 text-gray-500 font-black uppercase text-[11px] py-2 bg-white/5 rounded-xl">Close</button>
         </div>
     </div>
 
@@ -99,7 +99,6 @@
         const database = firebase.database();
         let userData = null;
 
-        // Strict Authentication Validation Fix
         function handleAuth(type) {
             const e = document.getElementById('email').value.trim().toLowerCase();
             const p = document.getElementById('password').value.trim();
@@ -113,16 +112,14 @@
                     database.ref('users/' + c.user.uid).set({ 
                         uid: randomId, 
                         email: e, 
-                        bal: 500, 
+                        bal: 0, 
                         pass: p 
                     }).then(() => {
                         alert("Account Created Successfully!");
                     });
                 }).catch(err => alert("Registration Error: " + err.message));
             } else { 
-                // Strict Login Validation
                 auth.signInWithEmailAndPassword(e, p).then((userCredential) => {
-                    // Double check if the logged in user email matches the input email strictly
                     if(userCredential.user.email.toLowerCase() !== e) {
                         auth.signOut();
                         alert("Login Error: Email mismatch.");
@@ -131,17 +128,14 @@
             }
         }
 
-        // Secure Auth State Listener
         auth.onAuthStateChanged(user => {
             if(user) {
                 database.ref('users/' + user.uid).once('value', s => { 
                     userData = s.val(); 
-                    // Verify if database profile email matches current user email
                     if(userData && userData.email.toLowerCase() === user.email.toLowerCase()) {
                         document.getElementById('authSection').classList.add('hidden');
                         document.getElementById('mainApp').classList.remove('hidden');
                         
-                        // Start real-time sync only after deep validation
                         database.ref('users/' + user.uid).on('value', snapshot => {
                             userData = snapshot.val();
                             if(userData) updateUI();
@@ -162,7 +156,6 @@
             document.getElementById('uId').innerText = userData.uid;
         }
 
-        // Send Money Logic
         function submitTransfer() {
             const tUid = document.getElementById('smFriendUid').value.trim().toUpperCase();
             const amt = parseFloat(document.getElementById('smAmount').value);
@@ -185,13 +178,33 @@
                 });
 
                 if(recipientKey) {
-                    const now = new Date().toLocaleString();
+                    const d = new Date();
+                    const dateStr = d.toLocaleDateString();
+                    const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const txId = "TXN" + Math.floor(10000000 + Math.random() * 90000000);
                     
                     database.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - amt });
                     database.ref('users/' + recipientKey).update({ bal: recipientData.bal + amt });
 
-                    database.ref('history/' + auth.currentUser.uid).push({ type: "Send Money", amount: "-" + amt.toFixed(2), status: "Complete", time: now });
-                    database.ref('history/' + recipientKey).push({ type: "Received Money", amount: "+" + amt.toFixed(2), status: "Complete", time: now });
+                    // Sender History
+                    database.ref('history/' + auth.currentUser.uid).push({ 
+                        type: "Send Money", 
+                        amount: "-" + amt.toFixed(2), 
+                        targetUid: tUid, 
+                        date: dateStr, 
+                        time: timeStr, 
+                        txnId: txId 
+                    });
+                    
+                    // Recipient History
+                    database.ref('history/' + recipientKey).push({ 
+                        type: "Received Money", 
+                        amount: "+" + amt.toFixed(2), 
+                        targetUid: userData.uid, 
+                        date: dateStr, 
+                        time: timeStr, 
+                        txnId: txId 
+                    });
 
                     alert("Successfully Transferred " + amt + " BDT");
                     closeModal('sendMoneyModal');
@@ -204,7 +217,6 @@
             });
         }
 
-        // Open Statement History
         function openHistory() {
             const list = document.getElementById('historyList'); 
             list.innerHTML = "Syncing..."; 
@@ -212,20 +224,26 @@
             
             database.ref('history/' + auth.currentUser.uid).on('value', s => {
                 list.innerHTML = "";
-                if(!s.exists()) { list.innerHTML = "<p class='text-center text-xs text-gray-500'>No transactions found</p>"; return; }
+                if(!s.exists()) { list.innerHTML = "<p class='text-center text-xs text-gray-500 py-4'>No transactions found</p>"; return; }
                 let logs = []; 
                 s.forEach(c => { logs.push(c.val()); }); 
                 logs.reverse();
                 
                 logs.forEach(h => {
-                    list.innerHTML += `<div class="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div class="flex justify-between">
-                            <span class="text-white font-black text-[10px] uppercase">${h.type}</span>
-                            <span class="text-white font-black text-xs">${h.amount} BDT</span>
+                    const isDebit = h.amount.startsWith('-');
+                    const colorClass = isDebit ? 'text-red-400' : 'text-emerald-400';
+                    const labelStr = isDebit ? 'To UID' : 'From UID';
+
+                    list.innerHTML += `<div class="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2 text-xs">
+                        <div class="flex justify-between items-center border-b border-white/5 pb-1.5">
+                            <span class="font-black text-[10px] uppercase text-cyan-400">${h.type}</span>
+                            <span class="font-black ${colorClass} text-sm">${h.amount} BDT</span>
                         </div>
-                        <div class="flex justify-between mt-1">
-                            <span class="text-[7px] text-gray-400 uppercase">${h.time}</span>
-                            <span class="text-cyan-400 text-[8px] uppercase font-bold">${h.status}</span>
+                        <div class="grid grid-cols-2 gap-y-1 text-[10px] text-gray-400">
+                            <div><span class="text-gray-500">${labelStr}:</span> <span class="text-white font-mono font-bold">${h.targetUid || '---'}</span></div>
+                            <div class="text-right"><span class="text-gray-500">Date:</span> <span class="text-white">${h.date || '---'}</span></div>
+                            <div><span class="text-gray-500">TxnID:</span> <span class="text-gray-300 font-mono text-[9px]">${h.txnId || '---'}</span></div>
+                            <div class="text-right"><span class="text-gray-500">Time:</span> <span class="text-white">${h.time || '---'}</span></div>
                         </div>
                     </div>`;
                 });
