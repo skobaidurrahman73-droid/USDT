@@ -76,9 +76,9 @@
 
     <div id="historyModal" class="modal">
         <div class="glass p-6 w-full max-w-sm">
-            <h2 class="text-lg font-black mb-4 text-center text-cyan-400 uppercase">Statement</h2>
+            <h2 class="text-lg font-black mb-4 text-center text-cyan-400 uppercase tracking-wider">Statement</h2>
             <div id="historyList" class="space-y-3 max-h-[60vh] overflow-y-auto no-scrollbar pr-1"></div>
-            <button onclick="closeModal('historyModal')" class="w-full mt-4 text-gray-500 font-black uppercase text-[11px] py-2 bg-white/5 rounded-xl">Close</button>
+            <button onclick="closeModal('historyModal')" class="w-full mt-4 text-gray-400 font-black uppercase text-[11px] py-3 bg-white/5 rounded-xl hover:bg-white/10 transition">Close</button>
         </div>
     </div>
 
@@ -179,14 +179,16 @@
 
                 if(recipientKey) {
                     const d = new Date();
-                    const dateStr = d.toLocaleDateString();
-                    const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    // আলাদা আলাদা ডেট এবং টাইম ফরম্যাট জেনারেট করা হয়েছে
+                    const dateStr = d.toLocaleDateString('en-GB'); // DD/MM/YYYY ফরম্যাট
+                    const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                     const txId = "TXN" + Math.floor(10000000 + Math.random() * 90000000);
                     
                     database.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - amt });
                     database.ref('users/' + recipientKey).update({ bal: recipientData.bal + amt });
 
-                    // Sender History
+                    // Sender History অবজেক্ট (ডেটাবেজে সুনির্দিষ্ট কী-নেম সহ পুশ)
                     database.ref('history/' + auth.currentUser.uid).push({ 
                         type: "Send Money", 
                         amount: "-" + amt.toFixed(2), 
@@ -196,7 +198,7 @@
                         txnId: txId 
                     });
                     
-                    // Recipient History
+                    // Recipient History অবজেক্ট
                     database.ref('history/' + recipientKey).push({ 
                         type: "Received Money", 
                         amount: "+" + amt.toFixed(2), 
@@ -219,7 +221,7 @@
 
         function openHistory() {
             const list = document.getElementById('historyList'); 
-            list.innerHTML = "Syncing..."; 
+            list.innerHTML = "<p class='text-center text-xs text-gray-500 py-4 font-mono'>Syncing data...</p>"; 
             openModal('historyModal');
             
             database.ref('history/' + auth.currentUser.uid).on('value', s => {
@@ -233,17 +235,23 @@
                     const isDebit = h.amount.startsWith('-');
                     const colorClass = isDebit ? 'text-red-400' : 'text-emerald-400';
                     const labelStr = isDebit ? 'To UID' : 'From UID';
+                    
+                    // পুরনো বা ত্রুটিপূর্ণ অবজেক্টের ব্যাকআপ লজিক হ্যান্ডলিং করা হয়েছে এখানে
+                    const displayDate = h.date ? h.date : (h.time && h.time.includes('/') ? h.time.split(',')[0] : '---');
+                    const displayTime = h.time ? (h.time.includes(',') ? h.time.split(',')[1].trim() : h.time) : '---';
+                    const displayTxnId = h.txnId ? h.txnId : '---';
+                    const displayTargetUid = h.targetUid ? h.targetUid : '---';
 
                     list.innerHTML += `<div class="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2 text-xs">
                         <div class="flex justify-between items-center border-b border-white/5 pb-1.5">
-                            <span class="font-black text-[10px] uppercase text-cyan-400">${h.type}</span>
+                            <span class="font-black text-[10px] uppercase text-cyan-400 tracking-wider">${h.type}</span>
                             <span class="font-black ${colorClass} text-sm">${h.amount} BDT</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-y-1 text-[10px] text-gray-400">
-                            <div><span class="text-gray-500">${labelStr}:</span> <span class="text-white font-mono font-bold">${h.targetUid || '---'}</span></div>
-                            <div class="text-right"><span class="text-gray-500">Date:</span> <span class="text-white">${h.date || '---'}</span></div>
-                            <div><span class="text-gray-500">TxnID:</span> <span class="text-gray-300 font-mono text-[9px]">${h.txnId || '---'}</span></div>
-                            <div class="text-right"><span class="text-gray-500">Time:</span> <span class="text-white">${h.time || '---'}</span></div>
+                        <div class="grid grid-cols-2 gap-y-2 text-[10px] text-gray-400 pt-1">
+                            <div><span class="text-gray-500">${labelStr}:</span> <span class="text-white font-mono font-bold">${displayTargetUid}</span></div>
+                            <div class="text-right"><span class="text-gray-500">Date:</span> <span class="text-white font-mono">${displayDate}</span></div>
+                            <div><span class="text-gray-500">TxnID:</span> <span class="text-gray-300 font-mono text-[9px]">${displayTxnId}</span></div>
+                            <div class="text-right"><span class="text-gray-500">Time:</span> <span class="text-white font-mono">${displayTime}</span></div>
                         </div>
                     </div>`;
                 });
