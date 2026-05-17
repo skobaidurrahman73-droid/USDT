@@ -3,105 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <title>BDT Wallet</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <style>
-        body { background: #050505; color: white; font-family: sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-900 text-white p-5">
 
-    <!-- Auth Section -->
-    <div id="authSection" class="max-w-md mx-auto h-screen flex flex-col justify-center px-6">
-        <div class="glass p-8 text-center">
-            <h1 class="text-2xl font-bold mb-6 text-emerald-400">BDT WALLET</h1>
-            <input type="email" id="email" placeholder="Email Address" class="w-full p-3 rounded-lg mb-3 bg-white/10 text-white outline-none">
-            <input type="password" id="password" placeholder="6-Digit PIN" maxlength="6" class="w-full p-3 rounded-lg mb-6 bg-white/10 text-white outline-none text-center tracking-widest">
-            <div class="flex gap-2">
-                <button onclick="handleAuth('login')" class="flex-1 bg-emerald-600 py-3 rounded-lg font-bold">Login</button>
-                <button onclick="handleAuth('signup')" class="flex-1 border border-emerald-600 py-3 rounded-lg font-bold">Register</button>
-            </div>
+    <div id="app" class="max-w-md mx-auto">
+        <!-- Auth Section -->
+        <div id="authSection">
+            <h2 class="text-2xl font-bold mb-4">Login / Register</h2>
+            <input type="email" id="email" placeholder="Email" class="w-full p-2 mb-2 bg-gray-800 rounded">
+            <input type="password" id="password" placeholder="6-Digit PIN" maxlength="6" class="w-full p-2 mb-4 bg-gray-800 rounded">
+            <button onclick="login()" class="w-full bg-blue-600 p-2 mb-2 rounded">Login</button>
+            <button onclick="register()" class="w-full bg-green-600 p-2 rounded">Register</button>
+        </div>
+
+        <!-- Wallet Section -->
+        <div id="walletSection" class="hidden">
+            <h2 class="text-xl font-bold">UID: <span id="uidDisplay"></span></h2>
+            <h1 class="text-4xl my-4 text-center" id="balanceDisplay">0.00 BDT</h1>
+            <button onclick="auth.signOut()" class="w-full bg-red-600 p-2 rounded">Logout</button>
         </div>
     </div>
-
-    <!-- Main App -->
-    <div id="mainApp" class="max-w-md mx-auto px-6 py-10 hidden">
-        <div class="flex justify-between mb-8">
-            <h2 class="font-bold">UID: <span id="uId" class="text-emerald-400">---</span></h2>
-            <button onclick="auth.signOut()" class="text-xs text-red-400">LOGOUT</button>
-        </div>
-        <div class="glass p-8 text-center mb-6">
-            <p class="text-xs text-gray-400 uppercase">Balance</p>
-            <h1 id="mainBal" class="text-4xl font-black my-2">0.00 BDT</h1>
-        </div>
-        <button onclick="openModal('sendModal')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold mb-3">Send Money</button>
-        <button onclick="openHistory()" class="w-full bg-white/5 py-4 rounded-xl font-bold">Transaction History</button>
-        <p class="text-center text-[10px] mt-10 text-gray-500">Support: fafod33233@tokoub.com</p>
-    </div>
-
-    <!-- Modals -->
-    <div id="sendModal" class="modal"><div class="glass p-6 w-full max-w-sm"><h2 class="mb-4">Send Money</h2><input type="text" id="rUid" placeholder="Recipient UID" class="w-full p-3 mb-2 rounded bg-black outline-none uppercase"><input type="number" id="amt" placeholder="Amount" class="w-full p-3 mb-2 rounded bg-black outline-none"><input type="password" id="pin" placeholder="6-Digit PIN" maxlength="6" class="w-full p-3 mb-4 rounded bg-black outline-none"><div class="flex gap-2"><button onclick="closeModal('sendModal')" class="flex-1 py-2 bg-gray-700 rounded">Cancel</button><button onclick="transfer()" class="flex-1 py-2 bg-emerald-600 rounded">Send</button></div></div></div>
-    <div id="historyModal" class="modal"><div class="glass p-6 w-full max-w-sm"><h2 class="mb-4">History</h2><div id="histList" class="max-h-60 overflow-y-auto"></div><button onclick="closeModal('historyModal')" class="w-full mt-4 py-2 bg-gray-700 rounded">Close</button></div></div>
 
     <script>
-        const firebaseConfig = { /* আপনার কনফিগারেশন এখানে বসান */ };
+        // --- আপনার কনফিগারেশন এখানে বসান ---
+        const firebaseConfig = {
+            apiKey: "AIza...",
+            authDomain: "...",
+            projectId: "...",
+            databaseURL: "...",
+            storageBucket: "...",
+            messagingSenderId: "...",
+            appId: "..."
+        };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-        let userData = null;
 
-        auth.onAuthStateChanged(u => {
-            if(u) {
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                db.ref('users/' + u.uid).on('value', s => { userData = s.val(); if(userData) { document.getElementById('mainBal').innerText = userData.bal.toFixed(2) + " BDT"; document.getElementById('uId').innerText = userData.uid; }});
-            } else { location.reload(); }
-        });
-
-        function handleAuth(type) {
+        // রেজিস্টার ফাংশন
+        function register() {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
-            if(p.length !== 6) return alert("PIN must be 6 digits!");
-            if(type === 'signup') {
-                auth.createUserWithEmailAndPassword(e, p).then(c => {
-                    db.ref('users/' + c.user.uid).set({ uid: "BDT" + Math.floor(100000 + Math.random()*900000), bal: 100, pin: p });
-                }).catch(err => alert(err.message));
-            } else { auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message)); }
+            if(p.length !== 6) return alert("PIN must be 6 digits");
+            
+            auth.createUserWithEmailAndPassword(e, p).then(userCred => {
+                db.ref('users/' + userCred.user.uid).set({
+                    uid: "BDT" + Math.floor(100000 + Math.random()*900000),
+                    bal: 100,
+                    pin: p
+                }).then(() => alert("Registration Successful!"));
+            }).catch(err => alert("Reg Error: " + err.message));
         }
 
-        async function transfer() {
-            const rUid = document.getElementById('rUid').value.toUpperCase();
-            const amt = parseFloat(document.getElementById('amt').value);
-            const pin = document.getElementById('pin').value;
-            if(pin !== userData.pin) return alert("Wrong PIN!");
-            if(amt > userData.bal) return alert("Insufficient!");
-
-            const snapshot = await db.ref('users').once('value');
-            let recKey = null;
-            snapshot.forEach(c => { if(c.val().uid === rUid) recKey = c.key; });
-
-            if(recKey) {
-                db.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - amt });
-                db.ref('users/' + recKey).update({ bal: snapshot.val()[recKey].bal + amt });
-                db.ref('history/' + auth.currentUser.uid).push({ type: "Sent to " + rUid, amt: amt });
-                alert("Success!"); closeModal('sendModal');
-            } else alert("UID not found!");
+        // লগইন ফাংশন
+        function login() {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            auth.signInWithEmailAndPassword(e, p).catch(err => alert("Login Error: " + err.message));
         }
 
-        function openHistory() {
-            openModal('historyModal');
-            db.ref('history/' + auth.currentUser.uid).once('value', s => {
-                document.getElementById('histList').innerHTML = "";
-                s.forEach(c => { document.getElementById('histList').innerHTML += `<p class="text-xs mb-1">${c.val().type}: ${c.val().amt} BDT</p>`; });
-            });
-        }
-
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        // অথ স্টেট চেক
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('walletSection').classList.remove('hidden');
+                db.ref('users/' + user.uid).on('value', s => {
+                    const d = s.val();
+                    document.getElementById('uidDisplay').innerText = d.uid;
+                    document.getElementById('balanceDisplay').innerText = d.bal + " BDT";
+                });
+            } else {
+                document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('walletSection').classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
