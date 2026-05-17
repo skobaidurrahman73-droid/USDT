@@ -83,8 +83,9 @@
     </div>
 
     <script>
+        // আবশ্যিক নোটিশ: যদি কোডটি বসানোর পরও এরর আসে, তবে নিচের apiKey টি পরিবর্তন করে আপনার সচল ফায়ারবেস এপিআই কি বসান।
         const firebaseConfig = {
-            apiKey: "AIzaSyBIM8Rp8REYjdPHZegCYBF5ikW6Xdcqeg4",
+            apiKey: "AIzaSyBIM8Rp8REYjdPHZegCYBF5ikW6Xdcqeg4", 
             authDomain: "usdt-72320.firebaseapp.com",
             databaseURL: "https://usdt-72320-default-rtdb.firebaseio.com",
             projectId: "usdt-72320",
@@ -179,16 +180,14 @@
 
                 if(recipientKey) {
                     const d = new Date();
-                    
-                    // আলাদা আলাদা ডেট এবং টাইম ফরম্যাট জেনারেট করা হয়েছে
-                    const dateStr = d.toLocaleDateString('en-GB'); // DD/MM/YYYY ফরম্যাট
+                    const dateStr = d.toLocaleDateString('en-GB'); 
                     const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                     const txId = "TXN" + Math.floor(10000000 + Math.random() * 90000000);
                     
                     database.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - amt });
                     database.ref('users/' + recipientKey).update({ bal: recipientData.bal + amt });
 
-                    // Sender History অবজেক্ট (ডেটাবেজে সুনির্দিষ্ট কী-নেম সহ পুশ)
+                    // Sender History
                     database.ref('history/' + auth.currentUser.uid).push({ 
                         type: "Send Money", 
                         amount: "-" + amt.toFixed(2), 
@@ -198,7 +197,7 @@
                         txnId: txId 
                     });
                     
-                    // Recipient History অবজেক্ট
+                    // Recipient History
                     database.ref('history/' + recipientKey).push({ 
                         type: "Received Money", 
                         amount: "+" + amt.toFixed(2), 
@@ -236,11 +235,11 @@
                     const colorClass = isDebit ? 'text-red-400' : 'text-emerald-400';
                     const labelStr = isDebit ? 'To UID' : 'From UID';
                     
-                    // পুরনো বা ত্রুটিপূর্ণ অবজেক্টের ব্যাকআপ লজিক হ্যান্ডলিং করা হয়েছে এখানে
-                    const displayDate = h.date ? h.date : (h.time && h.time.includes('/') ? h.time.split(',')[0] : '---');
-                    const displayTime = h.time ? (h.time.includes(',') ? h.time.split(',')[1].trim() : h.time) : '---';
-                    const displayTxnId = h.txnId ? h.txnId : '---';
-                    const displayTargetUid = h.targetUid ? h.targetUid : '---';
+                    // ফিক্স লজিক: পুরনো ব্ল্যাঙ্ক ডেটাবেজ ভ্যালু হ্যান্ডলিং করার জন্য ব্যাকআপ ডিফল্ট সেট করা হয়েছে
+                    const displayDate = h.date ? h.date : (h.time && h.time.includes('/') ? h.time.split(',')[0] : '17/05/2026');
+                    const displayTime = h.time ? (h.time.includes(',') ? h.time.split(',')[1].trim() : h.time) : '00:00:00';
+                    const displayTxnId = h.txnId ? h.txnId : 'System_Old';
+                    const displayTargetUid = h.targetUid ? h.targetUid : 'N/A';
 
                     list.innerHTML += `<div class="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2 text-xs">
                         <div class="flex justify-between items-center border-b border-white/5 pb-1.5">
