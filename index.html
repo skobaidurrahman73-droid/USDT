@@ -83,15 +83,16 @@
     </div>
 
     <script>
-        // আপনার প্রথম কোড থেকে নেওয়া অরিজিনাল সঠিক ফায়ারবেস কনফিগারেশন
+        // আপনার পাঠানো একদম অরিজিনাল ও সঠিক কনফিগারেশন ডেটা
         const firebaseConfig = {
             apiKey: "AIzaSyBIM8Rp8REYjdPHZegCYBF5ikW6Xdcqeg4",
             authDomain: "usdt-72320.firebaseapp.com",
-            projectId: "usdt-72320",
             databaseURL: "https://usdt-72320-default-rtdb.firebaseio.com",
+            projectId: "usdt-72320",
             storageBucket: "usdt-72320.firebasestorage.app",
             messagingSenderId: "7688156181",
-            appId: "1:7688156181:web:85ae9e18021d149627ca1c"
+            appId: "1:7688156181:web:85ae9e18021d149627ca1c",
+            measurementId: "G-VRS9ZTF6ZY"
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -113,7 +114,7 @@
                     database.ref('users/' + c.user.uid).set({ 
                         uid: randomId, 
                         email: e, 
-                        bal: 500, // নতুন একাউন্ট খোলার সাথে সাথে ৫০০ টাকা ব্যালেন্স
+                        bal: 500, // নতুন একাউন্ট বোনাস ব্যালেন্স ৫০০ টাকা
                         pass: p 
                     }).then(() => {
                         alert("Account Created Successfully!");
@@ -124,7 +125,7 @@
             }
         }
 
-        // Auth State Listener (Auto Reload সমস্যাটি ফিক্স করা হয়েছে)
+        // Auth State Listener
         auth.onAuthStateChanged(user => {
             if(user) {
                 document.getElementById('authSection').classList.add('hidden');
