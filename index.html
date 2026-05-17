@@ -83,7 +83,6 @@
     </div>
 
     <script>
-        // আপনার পাঠানো একদম অরিজিনাল ও সঠিক কনফিগারেশন ডেটা
         const firebaseConfig = {
             apiKey: "AIzaSyBIM8Rp8REYjdPHZegCYBF5ikW6Xdcqeg4",
             authDomain: "usdt-72320.firebaseapp.com",
@@ -100,9 +99,9 @@
         const database = firebase.database();
         let userData = null;
 
-        // Authentication Handler
+        // Strict Authentication Validation Fix
         function handleAuth(type) {
-            const e = document.getElementById('email').value.trim();
+            const e = document.getElementById('email').value.trim().toLowerCase();
             const p = document.getElementById('password').value.trim();
             
             if(!e || !p) return alert("Please fill all fields!");
@@ -114,25 +113,42 @@
                     database.ref('users/' + c.user.uid).set({ 
                         uid: randomId, 
                         email: e, 
-                        bal: 500, // নতুন একাউন্ট বোনাস ব্যালেন্স ৫০০ টাকা
+                        bal: 500, 
                         pass: p 
                     }).then(() => {
                         alert("Account Created Successfully!");
                     });
                 }).catch(err => alert("Registration Error: " + err.message));
             } else { 
-                auth.signInWithEmailAndPassword(e, p).catch(err => alert("Login Error: " + err.message)); 
+                // Strict Login Validation
+                auth.signInWithEmailAndPassword(e, p).then((userCredential) => {
+                    // Double check if the logged in user email matches the input email strictly
+                    if(userCredential.user.email.toLowerCase() !== e) {
+                        auth.signOut();
+                        alert("Login Error: Email mismatch.");
+                    }
+                }).catch(err => alert("Login Error: " + err.message)); 
             }
         }
 
-        // Auth State Listener
+        // Secure Auth State Listener
         auth.onAuthStateChanged(user => {
             if(user) {
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                database.ref('users/' + user.uid).on('value', s => { 
+                database.ref('users/' + user.uid).once('value', s => { 
                     userData = s.val(); 
-                    if(userData) updateUI(); 
+                    // Verify if database profile email matches current user email
+                    if(userData && userData.email.toLowerCase() === user.email.toLowerCase()) {
+                        document.getElementById('authSection').classList.add('hidden');
+                        document.getElementById('mainApp').classList.remove('hidden');
+                        
+                        // Start real-time sync only after deep validation
+                        database.ref('users/' + user.uid).on('value', snapshot => {
+                            userData = snapshot.val();
+                            if(userData) updateUI();
+                        });
+                    } else {
+                        auth.signOut();
+                    }
                 });
             } else { 
                 document.getElementById('authSection').classList.remove('hidden'); 
@@ -171,11 +187,9 @@
                 if(recipientKey) {
                     const now = new Date().toLocaleString();
                     
-                    // Deduct from Sender & Add to Recipient
                     database.ref('users/' + auth.currentUser.uid).update({ bal: userData.bal - amt });
                     database.ref('users/' + recipientKey).update({ bal: recipientData.bal + amt });
 
-                    // Log History
                     database.ref('history/' + auth.currentUser.uid).push({ type: "Send Money", amount: "-" + amt.toFixed(2), status: "Complete", time: now });
                     database.ref('history/' + recipientKey).push({ type: "Received Money", amount: "+" + amt.toFixed(2), status: "Complete", time: now });
 
